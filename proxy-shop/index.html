@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代購報價系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 32px;
+            width: 100%;
+            max-width: 480px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+        label .required {
+            color: #e74c3c;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .optional {
+            font-size: 12px;
+            color: #999;
+            font-weight: normal;
+        }
+        .row {
+            display: flex;
+            gap: 12px;
+        }
+        .row .form-group {
+            flex: 1;
+        }
+        .result {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 24px;
+        }
+        .result-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+        .result-amount {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        .result-breakdown {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+        button {
+            width: 100%;
+            padding: 16px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .success-message {
+            display: none;
+            background: #27ae60;
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 16px;
+        }
+        .exchange-rates {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ 代購報價系統</h1>
+        <p class="subtitle">簡單三步驟：填寫 → 自動計算 → 提交</p>
+
+        <div class="exchange-rates">
+            📊 匯率：JPY × 0.22 · KRW × 0.024 · USD × 32 （皆含 10% 代購費）
+        </div>
+
+        <form id="proxyForm">
+            <div class="form-group">
+                <label>商品名稱 <span class="optional">(選填)</span></label>
+                <input type="text" name="productName" placeholder="例如：UNIQLO 聯名T恤">
+            </div>
+
+            <div class="form-group">
+                <label>商品連結 <span class="required">*</span></label>
+                <input type="url" name="productUrl" required placeholder="https://...">
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label>幣別 <span class="required">*</span></label>
+                    <select name="currency" id="currency" required>
+                        <option value="JPY">🇯🇵 日幣 (JPY)</option>
+                        <option value="KRW">🇰🇷 韓幣 (KRW)</option>
+                        <option value="USD">🇺🇸 美金 (USD)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>商品金額 <span class="required">*</span></label>
+                    <input type="number" name="price" id="price" required placeholder="0" min="1">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>數量 <span class="optional">(預設 1)</span></label>
+                <input type="number" name="quantity" id="quantity" value="1" min="1">
+            </div>
+
+            <div class="result">
+                <div class="result-label">台幣報價</div>
+                <div class="result-amount" id="totalTWD">NT$ 0</div>
+                <div class="result-breakdown" id="breakdown"></div>
+            </div>
+
+            <button type="submit" id="submitBtn">提交至 Google Sheet</button>
+        </form>
+
+        <div class="success-message" id="successMessage">
+            ✅ 已成功提交！感謝使用～
+        </div>
+    </div>
+
+    <script>
+        const exchangeRates = {
+            JPY: 0.22,
+            KRW: 0.024,
+            USD: 32
+        };
+
+        const currencySymbols = {
+            JPY: '¥',
+            KRW: '₩',
+            USD: '$'
+        };
+
+        function calculate() {
+            const currency = document.getElementById('currency').value;
+            const price = parseFloat(document.getElementById('price').value) || 0;
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+
+            const rate = exchangeRates[currency];
+            const total = price * rate * 1.1 * quantity;
+            const symbol = currencySymbols[currency];
+
+            document.getElementById('totalTWD').textContent = `NT$ ${Math.round(total).toLocaleString()}`;
+            document.getElementById('breakdown').textContent = 
+                `${symbol}${price.toLocaleString()} × ${rate} × 1.1 × ${quantity} = NT$ ${Math.round(total).toLocaleString()}`;
+
+            return total;
+        }
+
+        document.getElementById('currency').addEventListener('change', calculate);
+        document.getElementById('price').addEventListener('input', calculate);
+        document.getElementById('quantity').addEventListener('input', calculate);
+
+        document.getElementById('proxyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const currency = form.currency.value;
+            const price = parseFloat(form.price.value);
+            const quantity = parseInt(form.quantity.value);
+            const totalTWD = calculate();
+
+            const formData = {
+                時間: new Date().toLocaleString('zh-TW'),
+                商品名稱: form.productName.value || '未填寫',
+                商品連結: form.productUrl.value,
+                幣別: currency,
+                商品金額: price,
+                數量: quantity,
+                台幣金額: Math.round(totalTWD)
+            };
+
+            // 這裡填入你的 Google Form Webhook URL
+            const webhookUrl = 'YOUR_GOOGLE_FORM_WEBHOOK_URL';
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '提交中...';
+
+            try {
+                // 顯示成功訊息（實際使用時需設定 Webhook URL）
+                document.getElementById('successMessage').style.display = 'block';
+                submitBtn.textContent = '✅ 已提交';
+                
+                console.log('表單資料：', formData);
+                alert('提交成功！\n\n' + 
+                      '商品：' + formData.商品名稱 + '\n' +
+                      '台幣金額：NT$ ' + formData.台幣金額.toLocaleString());
+                
+                // 重置表單
+                form.reset();
+                document.getElementById('quantity').value = 1;
+                calculate();
+                
+            } catch (error) {
+                console.error('提交失敗：', error);
+                alert('提交失敗，請稍後再試');
+            }
+
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '提交至 Google Sheet';
+            }, 2000);
+        });
+
+        // 初始化計算
+        calculate();
+    </script>
+</body>
+</html>

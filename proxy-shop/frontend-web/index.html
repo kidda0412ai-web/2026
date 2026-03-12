@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>代購網站 - 跨境購物首選</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+    
+    /* Header */
+    header { background: #fff; padding: 1rem 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 100; }
+    .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.5rem; font-weight: bold; color: #333; }
+    .nav { display: flex; gap: 2rem; align-items: center; }
+    .nav a { text-decoration: none; color: #666; font-weight: 500; }
+    .nav a:hover { color: #333; }
+    .cart-btn { background: #ff6b35; color: #fff; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; border: none; font-size: 1rem; }
+    
+    /* Hero */
+    .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 4rem 2rem; text-align: center; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem; }
+    .cta-btn { background: #fff; color: #667eea; padding: 1rem 2rem; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; border: none; }
+    
+    /* Products */
+    .products { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+    .section-title { font-size: 1.8rem; margin-bottom: 1.5rem; color: #333; }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+    .product-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); transition: transform 0.2s; }
+    .product-card:hover { transform: translateY(-4px); }
+    .product-image { width: 100%; height: 200px; object-fit: cover; background: #eee; }
+    .product-info { padding: 1rem; }
+    .product-name { font-weight: 600; margin-bottom: 0.5rem; color: #333; }
+    .product-price { font-size: 1.2rem; color: #ff6b35; font-weight: bold; }
+    .product-currency { font-size: 0.9rem; color: #888; }
+    .add-to-cart { width: 100%; background: #ff6b35; color: #fff; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; margin-top: 0.5rem; }
+    .add-to-cart:hover { background: #e55a2b; }
+    
+    /* Cart Modal */
+    .cart-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; }
+    .cart-modal.active { display: flex; justify-content: center; align-items: center; }
+    .cart-content { background: #fff; border-radius: 16px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+    .cart-header { padding: 1.5rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .cart-header h2 { font-size: 1.3rem; }
+    .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+    .cart-items { padding: 1rem; }
+    .cart-item { display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #eee; }
+    .cart-item-image { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
+    .cart-item-info { flex: 1; }
+    .cart-item-name { font-weight: 500; }
+    .cart-item-price { color: #ff6b35; }
+    .cart-item-qty { display: flex; align-items: center; gap: 0.5rem; }
+    .qty-btn { width: 28px; height: 28px; border: 1px solid #ddd; background: #fff; border-radius: 4px; cursor: pointer; }
+    .cart-footer { padding: 1.5rem; border-top: 1px solid #eee; }
+    .cart-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem; }
+    .checkout-btn { width: 100%; background: #667eea; color: #fff; padding: 1rem; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; }
+    .checkout-btn:hover { background: #5568d3; }
+    
+    /* Auth Modal */
+    .auth-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+    .auth-modal.active { display: flex; }
+    .auth-content { background: #fff; border-radius: 16px; padding: 2rem; width: 90%; max-width: 400px; }
+    .auth-tabs { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+    .auth-tab { flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; border-bottom: 2px solid #ddd; }
+    .auth-tab.active { border-color: #667eea; color: #667eea; }
+    .auth-form input { width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+    .auth-submit { width: 100%; background: #667eea; color: #fff; padding: 0.75rem; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+    
+    /* Features */
+    .features { background: #fff; padding: 4rem 2rem; margin-top: 4rem; }
+    .features-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+    .feature-card { text-align: center; padding: 2rem; }
+    .feature-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .feature-title { font-size: 1.2rem; margin-bottom: 0.5rem; }
+    .feature-desc { color: #666; }
+    
+    /* Footer */
+    footer { background: #333; color: #fff; padding: 2rem; text-align: center; }
+    
+    /* Loading */
+    .loading { text-align: center; padding: 2rem; color: #666; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="logo">🛒 代購網站</div>
+      <nav class="nav">
+        <a href="#products">商品</a>
+        <a href="#features">特色</a>
+        <button class="cart-btn" onclick="toggleCart()">🛒 購物車 (<span id="cart-count">0</span>)</button>
+        <button onclick="toggleAuth()">登入</button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>全球好物 一鍵代購</h1>
+    <p>日本、韓國、美国商品轻松购</p>
+    <button class="cta-btn" onclick="document.getElementById('products').scrollIntoView({behavior: 'smooth'})">開始購物</button>
+  </section>
+
+  <section class="products" id="products">
+    <h2 class="section-title">🔥 熱門商品</h2>
+    <div class="product-grid" id="product-grid">
+      <div class="loading">載入中...</div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">✈️</div>
+        <h3 class="feature-title">國際直郵</h3>
+        <p class="feature-desc">正品保障 快速配送</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3 class="feature-title">匯率透明</h3>
+        <p class="feature-desc">即時匯率 公平定價</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3 class="feature-title">支付安全</h3>
+        <p class="feature-desc">多元支付 保障交易</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <h3 class="feature-title">物流追蹤</h3>
+        <p class="feature-desc">即時掌握 商品動態</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 代購網站. All rights reserved.</p>
+  </footer>
+
+  <!-- Cart Modal -->
+  <div class="cart-modal" id="cart-modal">
+    <div class="cart-content">
+      <div class="cart-header">
+        <h2>🛒 購物車</h2>
+        <button class="close-btn" onclick="toggleCart()">×</button>
+      </div>
+      <div class="cart-items" id="cart-items">
+        <p style="text-align: center; color: #666;">購物車是空的</p>
+      </div>
+      <div class="cart-footer">
+        <div class="cart-total">
+          <span>總計</span>
+          <span id="cart-total">NT$0</span>
+        </div>
+        <button class="checkout-btn" onclick="checkout()">立即結帳</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div class="auth-modal" id="auth-modal">
+    <div class="auth-content">
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuthTab('login')">登入</div>
+        <div class="auth-tab" onclick="switchAuthTab('register')">註冊</div>
+      </div>
+      <form class="auth-form" id="login-form" onsubmit="handleLogin(event)">
+        <input type="email" placeholder="Email" required>
+        <input type="password" placeholder="密碼" required>
+        <button type="submit" class="auth-submit">登入</button>
+      </form>
+      <form class="auth-form" id="register-form" style="display: none;" onsubmit="handleRegister(event)">
+        <input type="text" placeholder="姓名" required>
+        <input type="email" placeholder="Email" required>
+        <input type="password" placeholder="密碼" required>
+        <button type="submit" class="auth-submit">註冊</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ============ State ============
+    let products = [];
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    let user = JSON.parse(localStorage.getItem('user')) || null;
+
+    // ============ FX Rates ============
+    const FX_RATES = {
+      JPY: 0.22,
+      KRW: 0.024,
+      USD: 32.0
+    };
+
+    // ============ Init ============
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProducts();
+      updateCartUI();
+    });
+
+    // ============ Products ============
+    async function loadProducts() {
+      const grid = document.getElementById('product-grid');
+      
+      // Mock products for demo
+      products = [
+        { id: '1', name: 'UNIQLO 聯名款T恤', price: 1500, currency: 'JPY', images: ['https://via.placeholder.com/300x200?text=UNIQLO'] },
+        { id: '2', name: '韓國零食禮盒', price: 25000, currency: 'KRW', images: ['https://via.placeholder.com/300x200?text=零食'] },
+        { id: '3', name: 'Apple AirPods Pro', price: 250, currency: 'USD', images: ['https://via.placeholder.com/300x200?text=AirPods'] },
+        { id: '4', name: '日本藥妝面膜', price: 800, currency: 'JPY', images: ['https://via.placeholder.com/300x200?text=面膜'] },
+        { id: '5', name: '韓系設計師包包', price: 89000, currency: 'KRW', images: ['https://via.placeholder.com/300x200?text=包包'] },
+        { id: '6', name: 'Nike 運動鞋', price: 180, currency: 'USD', images: ['https://via.placeholder.com/300x200?text=Nike'] },
+        { id: '7', name: '日本卡通週邊', price: 2500, currency: 'JPY', images: ['https://via.placeholder.com/300x200?text=週邊'] },
+        { id: '8', name: '韓國護膚品套裝', price: 45000, currency: 'KRW', images: ['https://via.placeholder.com/300x200?text=護膚品'] },
+      ];
+      
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = products.map(p => {
+        const twd = convertToTWD(p.price, p.currency);
+        return `
+          <div class="product-card">
+            <img src="${p.images[0]}" alt="${p.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x200?text=商品'">
+            <div class="product-info">
+              <div class="product-name">${p.name}</div>
+              <div class="product-price">
+                NT$${twd.toFixed(0)}
+                <span class="product-currency">(${p.currency} ${p.price.toLocaleString()})</span>
+              </div>
+              <button class="add-to-cart" onclick="addToCart('${p.id}')">加入購物車</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function convertToTWD(amount, currency) {
+      return Math.round(amount * (FX_RATES[currency] || 1) * 1.1);
+    }
+
+    // ============ Cart ============
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+
+      const existing = cart.find(item => item.productId === productId);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        cart.push({ productId, quantity: 1 });
+      }
+      
+      saveCart();
+      updateCartUI();
+      alert('已加入購物車！');
+    }
+
+    function removeFromCart(productId) {
+      cart = cart.filter(item => item.productId !== productId);
+      saveCart();
+      updateCartUI();
+    }
+
+    function updateQuantity(productId, delta) {
+      const item = cart.find(i => i.productId === productId);
+      if (!item) return;
+      
+      item.quantity += delta;
+      if (item.quantity <= 0) {
+        removeFromCart(productId);
+      } else {
+        saveCart();
+        updateCartUI();
+      }
+    }
+
+    function saveCart() {
+      localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    function updateCartUI() {
+      document.getElementById('cart-count').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+      
+      const cartItems = document.getElementById('cart-items');
+      if (cart.length === 0) {
+        cartItems.innerHTML = '<p style="text-align: center; color: #666;">購物車是空的</p>';
+        document.getElementById('cart-total').textContent = 'NT$0';
+        return;
+      }
+
+      let total = 0;
+      cartItems.innerHTML = cart.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        if (!product) return '';
+        const price = convertToTWD(product.price, product.currency);
+        total += price * item.quantity;
+        return `
+          <div class="cart-item">
+            <img src="${product.images[0]}" alt="${product.name}" class="cart-item-image">
+            <div class="cart-item-info">
+              <div class="cart-item-name">${product.name}</div>
+              <div class="cart-item-price">NT$${price.toFixed(0)}</div>
+              <div class="cart-item-qty">
+                <button class="qty-btn" onclick="updateQuantity('${product.id}', -1)">-</button>
+                <span>${item.quantity}</span>
+                <button class="qty-btn" onclick="updateQuantity('${product.id}', 1)">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('cart-total').textContent = `NT$${total.toFixed(0)}`;
+    }
+
+    function toggleCart() {
+      document.getElementById('cart-modal').classList.toggle('active');
+    }
+
+    function checkout() {
+      if (!user) {
+        toggleCart();
+        toggleAuth();
+        return alert('請先登入');
+      }
+      
+      if (cart.length === 0) {
+        return alert('購物車是空的');
+      }
+
+      // Create order
+      const items = cart.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        return { productId: item.productId, quantity: item.quantity };
+      });
+
+      alert('訂單已建立！感謝您的購買！');
+      cart = [];
+      saveCart();
+      updateCartUI();
+      toggleCart();
+    }
+
+    // ============ Auth ============
+    function toggleAuth() {
+      document.getElementById('auth-modal').classList.toggle('active');
+    }
+
+    function switchAuthTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      user = { id: '1', name: 'User', email: 'user@example.com' };
+      localStorage.setItem('user', JSON.stringify(user));
+      alert('登入成功！');
+      toggleAuth();
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      user = { id: '1', name: 'New User', email: 'new@example.com' };
+      localStorage.setItem('user', JSON.stringify(user));
+      alert('註冊成功！');
+      toggleAuth();
+    }
+  </script>
+</body>
+</html>
